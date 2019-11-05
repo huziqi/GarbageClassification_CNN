@@ -7,21 +7,25 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class NN(nn.Module):
-    def __init__(self, num_chars, batch_size, seq_size):
+    def __init__(self, num_classes):
+        self.num_classes= num_classes
         super(NN, self).__init__()
-        self.num_chars= num_chars
-        self.batch_size= batch_size
-        self.seq_size= seq_size
-        self.embedding= nn.Embedding(self.num_chars, 100)
-        self.fc1 = nn.Sequential(
-            nn.Linear(self.seq_size*self.num_chars*100, 250),
-            nn.ReLU()
-        )
-        self.fc2 = nn.Linear(250, self.num_chars)
+        self.norm  = nn.LocalResponseNorm(size=5)
+        self.drop  = nn.Dropout()
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=96, kernel_size=11, stride=4)
+        self.pool1 = nn.MaxPool2d(kernel_size=3, stride=2)
+        self.conv2 = nn.Conv2d(in_channels=96, out_channels=256, kernel_size=5, padding=2)
+        self.pool2 = nn.MaxPool2d(kernel_size=3, stride=2)
+        self.conv3 = nn.Conv2d(in_channels=256, out_channels=384, kernel_size=3, padding=1)
+        self.conv4 = nn.Conv2d(in_channels=384, out_channels=384, kernel_size=3, padding=1)
+        self.conv5 = nn.Conv2d(in_channels=384, out_channels=256, kernel_size=3, padding=1)
+        self.full6 = nn.Linear(79872, 4096)
+        self.full7 = nn.Linear(4096, 4096)
+        self.full8 = nn.Linear(4096, self.num_classes)
+
 
     # 定义前向传播过程，输入为inputs
     def forward(self, inputs):
-        inputs= torch.LongTensor(inputs)
         inputs= torch.reshape(inputs,(self.batch_size*self.seq_size, 1))
         inputs= torch.zeros(self.batch_size*self.seq_size, self.num_chars).scatter_(1, inputs, 1) # one-hot encoding
         inputs= torch.reshape(inputs, (self.batch_size, self.seq_size, self.num_chars))
