@@ -4,6 +4,7 @@ import os
 from sklearn.model_selection import train_test_split
 from PIL import Image
 from torchvision import transforms
+from sklearn import preprocessing
 
 class Data_loader():
     def __init__(self, file_path):
@@ -15,13 +16,15 @@ class Data_loader():
         for first_category in os.listdir(self.file_path):
             for second_category in os.listdir(self.file_path+'/'+first_category):
                 for third_category in os.listdir(self.file_path+'/'+first_category+'/'+second_category):
-                    for pic in os.listdir(self.file_path+'/'+first_category+'/'+second_category+'/'+third_category+ '/Images_withoutrect'):
-                        class_train.append(self.file_path+'/'+first_category+'/'+second_category+'/'+third_category
-                                           + '/Images_withoutrect''/'+pic)
+                    for pic in os.listdir(self.file_path+'/'+first_category+'/'+second_category+'/'+third_category):#+ '/Images_withoutrect'):
+                        class_train.append(self.file_path+'/'+first_category+'/'+second_category+'/'+third_category+pic)
+                                           #+ '/Images_withoutrect''/'+pic)
                         label_train.append(third_category)
         dict_label=set(label_train)
+        self.num_classes= len(dict_label)
         self.label2indice= dict((c, i) for i, c in enumerate(dict_label))
         label_train= [self.label2indice[c] for c in label_train]
+        print("label's shape:", np.shape(label_train))
         temp= np.array([class_train, label_train])
         temp= temp.transpose()# 转置
         # shuffle the samples
@@ -45,3 +48,10 @@ class Data_loader():
             image_batch.append(image)
             label_batch.append(label[index])
         return image_batch, label_batch
+
+    def get_num_classes(self):
+        return self.num_classes
+
+path= "/home/huziqi/baidunetdiskdownload"
+dataloader = Data_loader(path)
+x, y ,z,d=dataloader.get_files()

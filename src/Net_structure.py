@@ -12,10 +12,9 @@ class NN(nn.Module):
         super(NN, self).__init__()
         self.norm  = nn.LocalResponseNorm(size=5)
         self.drop  = nn.Dropout()
+        self.pool  = nn.MaxPool2d(kernel_size=3, stride=2)
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=96, kernel_size=11, stride=4)
-        self.pool1 = nn.MaxPool2d(kernel_size=3, stride=2)
         self.conv2 = nn.Conv2d(in_channels=96, out_channels=256, kernel_size=5, padding=2)
-        self.pool2 = nn.MaxPool2d(kernel_size=3, stride=2)
         self.conv3 = nn.Conv2d(in_channels=256, out_channels=384, kernel_size=3, padding=1)
         self.conv4 = nn.Conv2d(in_channels=384, out_channels=384, kernel_size=3, padding=1)
         self.conv5 = nn.Conv2d(in_channels=384, out_channels=256, kernel_size=3, padding=1)
@@ -26,13 +25,28 @@ class NN(nn.Module):
 
     # 定义前向传播过程，输入为inputs
     def forward(self, inputs):
-        inputs= torch.reshape(inputs,(self.batch_size*self.seq_size, 1))
-        inputs= torch.zeros(self.batch_size*self.seq_size, self.num_chars).scatter_(1, inputs, 1) # one-hot encoding
-        inputs= torch.reshape(inputs, (self.batch_size, self.seq_size, self.num_chars))
-        x= self.embedding(inputs.long())
-        x= x.view(x.size(0), -1)
-        x = self.fc1(x)
-        outputs = self.fc2(x)
+        batch_size= inputs.size(0) # 227*403*3
+        x= self.conv1(inputs) # 55*99*96
+        x= F.relu(x)
+        x= self.pool(x) # 27*49*96
+        x= self.norm(x)
+        x= self.conv2(x) # 27*49*256
+        x= F.relu(x)
+        x= self.pool(x) # 13*24*256
+        x= self.norm(x)
+        x= self.conv3(x) # 13*24*384
+        x= F.relu(x)
+        x= self.conv4(x) # 13*24*384
+        x= F.relu(x)
+        x= self.conv5(x) # 13*24*256
+        x= F.relu(x)
+        x= self.full6(x) # 4096*1
+        x= F.relu(x)
+        x= self.drop(x)
+        x= self.full7(x) # 4096*1
+        x= F.relu(x)
+        x= self.drop(x)
+        outputs= self.full8(x) # num_classes*1
         return outputs
 
     def predict(self, inputs, temperature=1.):
