@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision.models as models
 
 class NN(nn.Module):
     def __init__(self, num_classes):
@@ -18,9 +19,10 @@ class NN(nn.Module):
         self.conv3 = nn.Conv2d(in_channels=256, out_channels=384, kernel_size=3, padding=1)
         self.conv4 = nn.Conv2d(in_channels=384, out_channels=384, kernel_size=3, padding=1)
         self.conv5 = nn.Conv2d(in_channels=384, out_channels=256, kernel_size=3, padding=1)
-        self.full6 = nn.Linear(79872, 4096)
+        self.full6 = nn.Linear(9216, 4096)
         self.full7 = nn.Linear(4096, 4096)
         self.full8 = nn.Linear(4096, self.num_classes)
+
 
 
     # 定义前向传播过程，输入为inputs
@@ -40,7 +42,8 @@ class NN(nn.Module):
         x= F.relu(x)
         x= self.conv5(x) # 13*24*256
         x= F.relu(x)
-        x= self.full6(x) # 4096*1
+        x= self.pool(x) # 6*6*256
+        x= self.full6(x.view(batch_size,-1)) # 4096*1
         x= F.relu(x)
         x= self.drop(x)
         x= self.full7(x) # 4096*1
