@@ -79,7 +79,13 @@ def loadtraindata(root, batch_size):
 def loaddatafromfolder():
     path=r"/home/huziqi/Pictures/test"
     trainset= torchvision.datasets.ImageFolder(path, transform=transforms.Compose([transforms.Resize((227, 227)),transforms.ToTensor()]))
-    trainloader= torch.utils.data.DataLoader(trainset, batch_size=500, shuffle=True, num_workers=16)
+    trainsetforVGG16=torchvision.datasets.ImageFolder(path, transform=transforms.Compose(
+        [transforms.Resize((224, 224)),
+         transforms.ToTensor(),
+         transforms.Normalize((.5,.5,.5),(.5,.5,.5))]
+    ))
+    trainloader= torch.utils.data.DataLoader(trainset, batch_size=100, shuffle=True, num_workers=16)
+    trainloader_VGG = torch.utils.data.DataLoader(trainset, batch_size=100, shuffle=True, num_workers=16)
     return trainloader
 
 

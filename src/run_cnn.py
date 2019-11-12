@@ -20,7 +20,7 @@ resize=227
 trainloader, num_classes= data_read.loadtraindata(path,batch_size)
 data_fromfolder=data_read.loaddatafromfolder()
 
-net = Net_structure.NN(num_classes).to(device)
+net = Net_structure.Alexnet(num_classes).to(device)
 criterion = nn.CrossEntropyLoss()  # 交叉熵损失函数，通常用于多分类问题上
 optimizer= optim.Adam(net.parameters(), lr= learning_rate)
 optimizer2= optim.SGD(net.parameters(),lr=learning_rate, momentum=0.9)

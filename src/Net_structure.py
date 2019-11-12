@@ -7,10 +7,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
 
-class NN(nn.Module):
+class Alexnet(nn.Module):
     def __init__(self, num_classes):
         self.num_classes= num_classes
-        super(NN, self).__init__()
+        super(Alexnet, self).__init__()
         self.norm  = nn.LocalResponseNorm(size=5)
         self.drop  = nn.Dropout()
         self.pool  = nn.MaxPool2d(kernel_size=3, stride=2)
@@ -63,3 +63,26 @@ class NN(nn.Module):
         predicts = self.fc2(x)
         prob = F.softmax(predicts/ temperature).detach().numpy()
         return np.array([np.random.choice(self.num_chars, p=prob[0, :])])
+
+class VGG16net(nn.Module):
+    def __init__(self, num_classes):
+        super(VGG16net, self).__init__()
+        net= models.vgg16(pretrained=True)
+        net.classifier= nn.Sequential()
+        self.features= net
+        self.classifier= nn.Sequential(
+            nn.Linear(512*7*7,512),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(512,128),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(128, num_classes),
+        )
+
+    def forward(self, x):
+        x= self.features(x)
+        x= x.view(x.size(0), -1)
+        outputs= self.classifier(x)
+        return outputs
+
