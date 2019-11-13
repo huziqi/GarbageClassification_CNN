@@ -15,10 +15,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 path= "/home/huziqi/Pictures/test_picture"
 batch_size= 20
 learning_rate= 0.001
-EPOCH= 950
-resize=227
-trainloader, num_classes= data_read.loadtraindata(path,batch_size)
-data_fromfolder=data_read.loaddatafromfolder()
+EPOCH= 200
+resize=(227,227)
+trainloader, num_classes= data_read.loadtraindata(path,batch_size, resize)
+#data_fromfolder=data_read.loaddatafromfolder()
 
 net = Net_structure.Alexnet(num_classes).to(device)
 criterion = nn.CrossEntropyLoss()  # 交叉熵损失函数，通常用于多分类问题上
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         print('epoch{}'.format(epoch+1))
         sum_loss = 0.0
         sum_acc= 0.0
-        for inputs, labels in tqdm(data_fromfolder):
+        for inputs, labels in tqdm(trainloader):
             inputs = Variable(inputs)
             labels = Variable(labels)
             inputs=inputs.to(device)
@@ -52,8 +52,8 @@ if __name__ == "__main__":
             pred=torch.max(outputs,1)[1]
             train_correct= (pred==labels).sum()
             sum_acc+=float(train_correct.data.item())
-        print('Train Loss: {:.6f}, Acc: {:.6f}'.format(sum_loss/(len(trainloader.dataset)), sum_acc/(len(data_fromfolder.dataset))))
+        print('Train Loss: {:.6f}, Acc: {:.6f}'.format(sum_loss/(len(trainloader.dataset)), sum_acc/(len(trainloader.dataset))))
 
 
-    torch.save(net.state_dict(),'/home/huziqi/garbage_classification/model/5000pic_11classes_%d.pt'%EPOCH)
+    torch.save(net.state_dict(),'/home/huziqi/garbage_classification/model/5000pic_11classes_ownlabel_%d.pt'%EPOCH)
     #fout = open(output_path + str(EPOCH) + "_word_based_output.txt", "w")

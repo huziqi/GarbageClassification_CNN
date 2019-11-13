@@ -70,8 +70,8 @@ class MyDataset(data.Dataset):
     def __len__(self):
         return len(self.labels_train)
 
-def loadtraindata(root, batch_size):
-    dataset= MyDataset(root)
+def loadtraindata(root, batch_size, resize):
+    dataset= MyDataset(root, resize=resize)
     trainloader= torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=16, pin_memory=True)
     num_classes= dataset.num_classes
     return trainloader, num_classes
@@ -86,7 +86,7 @@ def loaddatafromfolder():
     ))
     trainloader= torch.utils.data.DataLoader(trainset, batch_size=100, shuffle=True, num_workers=16)
     trainloader_VGG = torch.utils.data.DataLoader(trainset, batch_size=100, shuffle=True, num_workers=16)
-    return trainloader
+    return trainloader_VGG
 
 
 # class Data_loader():
