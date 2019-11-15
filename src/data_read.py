@@ -19,37 +19,34 @@ class MyDataset(data.Dataset):
         self.labels=[]
         self.resize= resize
 
-        if self.usage=='train':
-            for first_category in os.listdir(self.root):
-                for second_category in os.listdir(self.root + '/' + first_category):
-                    for third_category in os.listdir(self.root + '/' + first_category + '/' + second_category):
-                        for pic in os.listdir(self.root + '/' + first_category + '/' + second_category + '/' + third_category + '/Image_withrect'):
-                            self.image_name.append(self.root + '/' + first_category + '/' + second_category + '/' + third_category + '/Image_withrect''/' + pic)
-                            self.labels.append(third_category)
-            dict_label = set(self.labels)
-            print("dict_label:",dict_label)
-            self.num_classes=len(dict_label)
-            self.label2indice= dict((c, i) for i, c in enumerate(dict_label))
-            self.labels= [self.label2indice[c] for c in self.labels]
-            print("self.labels:", self.labels)
-            temp= np.array([self.image_name, self.labels])
-            temp= temp.transpose()
-            np.random.shuffle(temp)
-            image_list= list(temp[:, 0])
-            label_list= list(temp[:, 1])
-            x_train, x_test, y_train, y_test= train_test_split(image_list, label_list, test_size=test_radio, random_state=0)
-            self.image_name_train=x_train
-            self.labels_train=y_train
-            self.image_name_test=x_test
-            self.labels_test=y_test
-            onehot= OneHotEncoder(sparse=False, categories='auto')
-            integer= LabelEncoder()
-            self.labels_train=np.array(self.labels_train)
-            self.labels_test= np.array(self.labels_test)
-            self.labels_train= self.labels_train.reshape(len(self.labels_train),1)
-            self.labels_test= self.labels_test.reshape(len(self.labels_test),1)
-            self.labels_train= integer.fit_transform(self.labels_train)
-            self.labels_test= integer.fit_transform(self.labels_test)
+        for first_category in os.listdir(self.root):
+            for second_category in os.listdir(self.root + '/' + first_category):
+                for third_category in os.listdir(self.root + '/' + first_category + '/' + second_category):
+                    for pic in os.listdir(self.root + '/' + first_category + '/' + second_category + '/' + third_category + '/Image_withoutrect'):
+                        self.image_name.append(self.root + '/' + first_category + '/' + second_category + '/' + third_category + '/Image_withoutrect''/' + pic)
+                        self.labels.append(third_category)
+        dict_label = set(self.labels)
+        self.num_classes=len(dict_label)
+        self.label2indice= dict((c, i) for i, c in enumerate(dict_label))
+        self.labels= [self.label2indice[c] for c in self.labels]
+        temp= np.array([self.image_name, self.labels])
+        temp= temp.transpose()
+        np.random.shuffle(temp)
+        image_list= list(temp[:, 0])
+        label_list= list(temp[:, 1])
+        x_train, x_test, y_train, y_test= train_test_split(image_list, label_list, test_size=test_radio, random_state=1)
+        self.image_name_train=x_train
+        self.labels_train=y_train
+        self.image_name_test=x_test
+        self.labels_test=y_test
+        onehot= OneHotEncoder(sparse=False, categories='auto')
+        integer= LabelEncoder()
+        self.labels_train=np.array(self.labels_train)
+        self.labels_test= np.array(self.labels_test)
+        self.labels_train= self.labels_train.reshape(len(self.labels_train),1)
+        self.labels_test= self.labels_test.reshape(len(self.labels_test),1)
+        self.labels_train= integer.fit_transform(self.labels_train)
+        self.labels_test= integer.fit_transform(self.labels_test)
 
     def __getitem__(self, index):
         """
@@ -58,23 +55,47 @@ class MyDataset(data.Dataset):
         :return:
             tuple: (image, target) where target is index of the target class.
         """
-        img_name= self.image_name_train[index]
-        img= Image.open(img_name).convert('RGB')
-        target= self.labels_train[index]
-        transforms1 = transforms.Compose([
-                      transforms.Resize(self.resize),
-                      transforms.ToTensor()])
-        img= transforms1(img)
-        return img, target
+        if self.usage=='train':
+            img_name= self.image_name_train[index]
+            img= Image.open(img_name).convert('RGB')
+            target= self.labels_train[index]
+            transforms1 = transforms.Compose([
+                          transforms.Resize(self.resize),
+                          transforms.ToTensor()])
+            img= transforms1(img)
+            return img, target
+
+        if self.usage=='test':
+            img_name = self.image_name_test[index]
+            img = Image.open(img_name).convert('RGB')
+            target = self.labels_test[index]
+            transforms1 = transforms.Compose([
+                transforms.Resize(self.resize),
+                transforms.ToTensor()])
+            img = transforms1(img)
+            return img, target
 
     def __len__(self):
-        return len(self.labels_train)
+        if self.usage=='train':
+            return len(self.labels_train)
+        if self.usage=='test':
+            return len(self.labels_test)
 
 def loadtraindata(root, batch_size, resize):
-    dataset= MyDataset(root, resize=resize)
+    dataset= MyDataset(root,usage='train',resize=resize)
+    print("total pic number: ", len(dataset.image_name))
+    print("total train number: ", len(dataset.image_name_train))
+    print("total test number: ", len(dataset.image_name_test))
     trainloader= torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=16, pin_memory=True)
     num_classes= dataset.num_classes
     return trainloader, num_classes
+
+def loadtestdata(root, batch_size, resize):
+    dataset= MyDataset(root,usage='test',resize=resize)
+    testloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=16,
+                                              pin_memory=True)
+    return testloader
+
 
 def loaddatafromfolder():
     path=r"/home/huziqi/Pictures/test"
@@ -88,7 +109,8 @@ def loaddatafromfolder():
     trainloader_VGG = torch.utils.data.DataLoader(trainset, batch_size=100, shuffle=True, num_workers=16)
     return trainloader_VGG
 
-
+root=r'/home/huziqi/Pictures/dataset'
+dataset=MyDataset(root)
 # class Data_loader():
 #     def __init__(self, file_path):
 #         self.file_path= file_path

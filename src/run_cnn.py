@@ -12,12 +12,13 @@ from tqdm import tqdm
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-path= "/home/huziqi/Pictures/test_picture"
+path= "/home/huziqi/Pictures/dataset"
 batch_size= 20
 learning_rate= 0.001
-EPOCH= 200
+EPOCH= 670
 resize=(227,227)
 trainloader, num_classes= data_read.loadtraindata(path,batch_size, resize)
+print("total classes: ", num_classes)
 #data_fromfolder=data_read.loaddatafromfolder()
 
 net = Net_structure.Alexnet(num_classes).to(device)
@@ -52,8 +53,22 @@ if __name__ == "__main__":
             pred=torch.max(outputs,1)[1]
             train_correct= (pred==labels).sum()
             sum_acc+=float(train_correct.data.item())
-        print('Train Loss: {:.6f}, Acc: {:.6f}'.format(sum_loss/(len(trainloader.dataset)), sum_acc/(len(trainloader.dataset))))
-
+        end_time=time.time()
+        print('Train Loss: {:.6f}, Acc: {:.6f}, cost time: {:.2f}'.format(sum_loss/(len(trainloader.dataset)), sum_acc/(len(trainloader.dataset)),end_time-start_time))
+    end_time=time.time()
+    print('total cost time is: %.2f'%(start_time-end_time))
 
     torch.save(net.state_dict(),'/home/huziqi/garbage_classification/model/5000pic_11classes_ownlabel_%d.pt'%EPOCH)
     #fout = open(output_path + str(EPOCH) + "_word_based_output.txt", "w")
+
+    testdataloader= data_read.loadtestdata(path,batch_size, resize)
+    test_acc=0
+    for images, labels in tqdm(testdataloader):
+        images, labels= Variable(images).to(device), Variable(labels).to(device)
+        outputs = net(images)
+        labels = labels.long()
+        pred = torch.max(outputs, 1)[1]
+        train_correct = (pred == labels).sum()
+        test_acc += float(train_correct.data.item())
+    end_time = time.time()
+    print('Test data Acc: {:.6f}, cost time: {:.2f}'.format(test_acc / (len(testdataloader.dataset)), end_time-start_time))
