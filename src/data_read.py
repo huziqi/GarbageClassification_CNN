@@ -98,7 +98,7 @@ def loadtestdata(root, batch_size, resize):
 
 
 def loaddatafromfolder():
-    path=r"/home/huziqi/Pictures/test"
+    path=r"/home/huziqi/Pictures/traindataset"
     trainset= torchvision.datasets.ImageFolder(path, transform=transforms.Compose([transforms.Resize((227, 227)),transforms.ToTensor()]))
     trainsetforVGG16=torchvision.datasets.ImageFolder(path, transform=transforms.Compose(
         [transforms.Resize((224, 224)),
@@ -106,8 +106,22 @@ def loaddatafromfolder():
          transforms.Normalize((.5,.5,.5),(.5,.5,.5))]
     ))
     trainloader= torch.utils.data.DataLoader(trainset, batch_size=100, shuffle=True, num_workers=16)
-    trainloader_VGG = torch.utils.data.DataLoader(trainset, batch_size=100, shuffle=True, num_workers=16)
-    return trainloader_VGG
+    trainloader_VGG = torch.utils.data.DataLoader(trainsetforVGG16, batch_size=100, shuffle=True, num_workers=16)
+    return trainloader
+
+def loadtestdatafromfolder():
+    path = r"/home/huziqi/Pictures/testdataset"
+    trainset = torchvision.datasets.ImageFolder(path, transform=transforms.Compose(
+        [transforms.Resize((227, 227)), transforms.ToTensor()]))
+    trainsetforVGG16 = torchvision.datasets.ImageFolder(path, transform=transforms.Compose(
+        [transforms.Resize((224, 224)),
+         transforms.ToTensor(),
+         transforms.Normalize((.5, .5, .5), (.5, .5, .5))]
+    ))
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=100, shuffle=True, num_workers=16)
+    trainloader_VGG = torch.utils.data.DataLoader(trainsetforVGG16, batch_size=100, shuffle=True, num_workers=16)
+    return trainloader
+
 
 root=r'/home/huziqi/Pictures/dataset'
 dataset=MyDataset(root)
